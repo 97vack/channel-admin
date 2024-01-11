@@ -1,35 +1,18 @@
 import { useEffect } from "react";
 import "./App.css";
-import { useRequest } from "@/hooks/request";
-import { Button, message } from "antd";
+import { useRequest } from "@/hooks/useRequest";
+import { Button, message, Input } from "antd";
+import { axiosInstance } from "@/api";
+import { useForm } from "react-form-simple";
+import { useNavigate, Outlet } from "react-router-dom";
+import { Guard } from "@/pages/Guard";
 
 function App() {
-  const { run } = useRequest("/channel/admantum/test");
-
-  useEffect(() => {
-    run();
-  }, []);
-
   return (
-    <div>
-      <div style={{ width: "300px", margin: "100px auto", fontSize: "20px" }}>
-        积分: 0
-        <div>
-          <button
-            style={{ minWidth: "60px", height: "30px" }}
-            onClick={() => {
-              message.info("This is a normal message");
-            }}
-          >
-            打开优惠墙
-          </button>
-        </div>
-      </div>
-      <div></div>
-    </div>
+    <Guard>
+      <Outlet />
+    </Guard>
   );
 }
 
 export default App;
-
-function Test() {}

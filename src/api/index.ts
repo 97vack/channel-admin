@@ -1,11 +1,20 @@
 import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
+import { message as Message } from "antd";
 
-export const instance = axios.create({
+export type UseRequestType = {
+  isSuccessNotify?: boolean;
+  formatResult?: (data: any) => any;
+  isErrorNotify?: boolean;
+  isStopReject?: boolean;
+} & AxiosRequestConfig;
+
+export const axiosInstance = axios.create({
   baseURL: "api",
   timeout: 100000,
 });
 
-instance.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   function (config) {
     // 在发送请求之前做些什么
     return config;
@@ -16,18 +25,41 @@ instance.interceptors.request.use(
   }
 );
 
-instance.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   function (response) {
     return response;
   },
   function (error) {
     const {
+      config,
       response: { data },
     } = error;
-    const { message } = data || {};
-    // showNotify({ type: "danger", message });
-    return Promise.reject(error);
+    const customRequestOptions: UseRequestType = (config || {})
+      .customRequestOptions;
+    const { isErrorNotify = true } = customRequestOptions;
+    if (isErrorNotify) {
+      Message.error(data?.message || "请求错误");
+    }
+    return Promise.resolve(data);
   }
 );
 
-export default instance;
+export const request = (
+  str: string,
+  requestParams: any,
+  axiosRequestConfig: AxiosRequestConfig
+) => {
+  const { method = "get" } = axiosRequestConfig || {};
+  const formatParams =
+    method === "get" ? { params: requestParams } : requestParams;
+
+  if (method === "get") {
+    return axios.get(str, {
+      ...axiosRequestConfig,
+      ...formatParams,
+    });
+  }
+  return (axiosInstance as any)[method](str, formatParams, axiosRequestConfig);
+};
+
+export default axiosInstance;

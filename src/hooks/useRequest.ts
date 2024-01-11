@@ -1,18 +1,11 @@
 import React, { useState } from "react";
 import { message as Message } from "antd";
-import { instance } from "@/api";
+import { request, UseRequestType } from "@/api";
 import { AxiosRequestConfig } from "axios";
 
-export type UseRequestType = {
-  isSuccessNotify?: boolean;
-  formatResult?: (data: any) => any;
-  isErrorNotify?: boolean;
-  isStopReject?: boolean;
-} & AxiosRequestConfig;
-
 export const packUrl =
-  (str: string, method: AxiosRequestConfig["method"]) => (params: any) =>
-    (instance as any)[method || "get"](str, params);
+  (str: string) => (params: any, axiosRequestConfig: AxiosRequestConfig) =>
+    request(str, params, axiosRequestConfig);
 
 export const useRequest = (api: any, options?: UseRequestType) => {
   const {
@@ -20,7 +13,6 @@ export const useRequest = (api: any, options?: UseRequestType) => {
     isErrorNotify = true,
     isStopReject = true,
     formatResult,
-    method,
     ...rests
   } = options || {};
 
@@ -28,19 +20,29 @@ export const useRequest = (api: any, options?: UseRequestType) => {
 
   const [retData, setRetData] = useState(null);
 
-  const run = async (params?: any) => {
+  const run = async (params?: any, axiosConfig?: AxiosRequestConfig) => {
     setLoading(true);
     try {
       let _api = api;
       if (typeof api === "string") {
-        _api = packUrl(api, method);
+        _api = packUrl(api);
       }
-      const res = await _api?.(params);
-
-      console.log(res);
+      const res = await _api?.(params, {
+        customRequestOptions: options,
+        ...rests,
+        ...axiosConfig,
+      });
+      setLoading(false);
+      if (res.code !== 0) {
+        if (isStopReject) {
+          return Promise.reject();
+        }
+      } else {
+      }
 
       const { message, code, data } = res?.data || {};
-      setLoading(false);
+
+      console.log(message, code, data);
       if (isErrorNotify && code !== 0) {
         Message.error(message ?? "请求失败");
         if (!isStopReject) {
@@ -59,7 +61,6 @@ export const useRequest = (api: any, options?: UseRequestType) => {
 
       return data;
     } catch (error) {
-      console.log(error);
       setLoading(false);
     }
   };
