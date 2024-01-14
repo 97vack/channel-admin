@@ -1,16 +1,25 @@
-import { useEffect } from "react";
+import { useRef } from "react";
 import "./App.css";
-import { useRequest } from "@/hooks/useRequest";
-import { Button, message, Input } from "antd";
-import { axiosInstance } from "@/api";
-import { useForm } from "react-form-simple";
-import { useNavigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Guard } from "@/pages/Guard";
+import { useLoginState } from "@/hooks/useLoginState";
+import { useLoginStateStore } from "@/store/useLoginStateStore";
 
 function App() {
+  const { stateAction, bindBeforeunload } = useLoginState();
+  const loginStore = useLoginStateStore.getState();
+  const isInit = useRef(true);
+  if (isInit.current) {
+    bindBeforeunload();
+    stateAction.setCacheUsers();
+  }
+  isInit.current = false;
+
   return (
     <Guard>
-      <Outlet />
+      <div style={{ padding: "15px" }}>
+        <Outlet />
+      </div>
     </Guard>
   );
 }

@@ -1,14 +1,10 @@
-import { useLoginState } from "@/hooks/useLoginState";
-import { useNavigate, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { useLoginStateStore } from "@/store/useLoginStateStore";
 
 export function Guard({ children }: { children: React.ReactNode }) {
-  const { stateAction } = useLoginState();
-  const isLoginState = stateAction.getLoginState();
-  const nav = useNavigate();
+  const token = useLoginStateStore((s) => s.state.token);
 
-  console.log(1111);
-
-  if (!isLoginState) {
+  if (!token) {
     return <Navigate to={"/login"} replace />;
   }
   return children;

@@ -7,18 +7,18 @@ export const isMobileDevice = () =>
 
 export const copyText = (content?: string) => {
   if (!content) return;
-  const notify = (type: any, message: string = "复制成功") => {
+  const notify = (message: string = "复制成功") => {
     Message.success(message);
   };
   if (navigator?.clipboard?.writeText) {
     return navigator?.clipboard
       ?.writeText(content)
       .then(() => {
-        notify("success");
+        notify();
         return content;
       })
       .catch(() => {
-        notify("danger");
+        notify();
         return content;
       });
   }

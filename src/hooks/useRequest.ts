@@ -1,24 +1,32 @@
-import React, { useState } from "react";
-import { message as Message } from "antd";
+import { useState } from "react";
 import { request, UseRequestType } from "@/api";
 import { AxiosRequestConfig } from "axios";
+
+const default_options = () => ({
+  isSuccessNotify: false,
+  isErrorNotify: true,
+  isAllowCancelError: false,
+  format: true,
+});
 
 export const packUrl =
   (str: string) => (params: any, axiosRequestConfig: AxiosRequestConfig) =>
     request(str, params, axiosRequestConfig);
 
 export const useRequest = (api: any, options?: UseRequestType) => {
+  const _options = Object.assign(default_options(), options);
   const {
-    isSuccessNotify = false,
-    isErrorNotify = true,
-    isStopReject = true,
+    isSuccessNotify,
+    isErrorNotify,
+    isAllowCancelError,
     formatResult,
+    format,
     ...rests
-  } = options || {};
+  } = _options || {};
 
   const [loading, setLoading] = useState(false);
 
-  const [retData, setRetData] = useState(null);
+  const [retData, setRetData] = useState<any>(null);
 
   const run = async (params?: any, axiosConfig?: AxiosRequestConfig) => {
     setLoading(true);
@@ -28,38 +36,25 @@ export const useRequest = (api: any, options?: UseRequestType) => {
         _api = packUrl(api);
       }
       const res = await _api?.(params, {
-        customRequestOptions: options,
+        customRequestOptions: _options,
         ...rests,
         ...axiosConfig,
       });
+
       setLoading(false);
       if (res.code !== 0) {
-        if (isStopReject) {
-          return Promise.reject();
-        }
+        return isAllowCancelError ? Promise.resolve(res) : Promise.reject();
       } else {
-      }
-
-      const { message, code, data } = res?.data || {};
-
-      console.log(message, code, data);
-      if (isErrorNotify && code !== 0) {
-        Message.error(message ?? "请求失败");
-        if (!isStopReject) {
-          return Promise.reject(res?.data);
+        let _formatData = res;
+        if (format) {
+          _formatData = res.data;
         }
+        if (formatResult) {
+          _formatData = formatResult?.(res);
+        }
+        setRetData(_formatData);
+        return _formatData;
       }
-      if (isSuccessNotify && code == 0) {
-        Message.success(message ?? "请求成功");
-      }
-
-      if (formatResult) {
-        const formatData = formatResult(data);
-        setRetData(formatData);
-        return formatData;
-      }
-
-      return data;
     } catch (error) {
       setLoading(false);
     }

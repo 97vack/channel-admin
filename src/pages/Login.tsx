@@ -1,13 +1,16 @@
-import { useEffect } from "react";
 import { useRequest } from "@/hooks/useRequest";
-import { Button, message, Input } from "antd";
-import { axiosInstance } from "@/api";
+import { Button, Input } from "antd";
 import { useForm } from "react-form-simple";
 import { useHistory } from "@/hooks/useHistory";
+import { useLoginState } from "@/hooks/useLoginState";
 
 function Login() {
   const { history } = useHistory();
-  const { run, loading } = useRequest("/user/login", { method: "post" });
+  const { stateAction } = useLoginState();
+  const { run, loading } = useRequest("/auth/login", {
+    method: "post",
+    isSuccessNotify: true,
+  });
 
   const { render, validate, model } = useForm(
     {
@@ -19,7 +22,11 @@ function Login() {
 
   const login = async () => {
     await validate();
-    await run(model);
+    const res = await run(model);
+    if (res) {
+      stateAction.setUsers(res);
+      history.push("/channel");
+    }
   };
 
   const renderEmail = render("email", { label: "邮箱" })(<Input />);
@@ -51,14 +58,14 @@ function Login() {
         >
           登录
         </Button>
-        <Button
+        {/* <Button
           style={{ marginLeft: "10px" }}
           onClick={() => {
             history.push("/register");
           }}
         >
           注册
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

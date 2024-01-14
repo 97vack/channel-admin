@@ -6,6 +6,7 @@ import { lazy, Suspense } from "react";
 const Login = lazy(() => import("@/pages/Login"));
 const Channel = lazy(() => import("@/pages/channel"));
 const Register = lazy(() => import("@/pages/Register"));
+const Home = lazy(() => import("@/pages/home"));
 
 export const routers = createBrowserRouter([
   {
@@ -14,6 +15,15 @@ export const routers = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
+        index: true,
+        element: (
+          <Suspense>
+            <Home />
+          </Suspense>
+        ),
+      },
+      {
+        index: true,
         path: "/channel",
         element: (
           <Suspense>

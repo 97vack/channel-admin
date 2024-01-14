@@ -1,22 +1,56 @@
 import axios from "axios";
 import type { AxiosRequestConfig } from "axios";
 import { message as Message } from "antd";
+import { useLoginStateStore } from "@/store/useLoginStateStore";
+import { redirect } from "react-router-dom";
 
 export type UseRequestType = {
   isSuccessNotify?: boolean;
   formatResult?: (data: any) => any;
   isErrorNotify?: boolean;
-  isStopReject?: boolean;
+  isAllowCancelError?: boolean;
+  format?: boolean;
 } & AxiosRequestConfig;
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export const axiosInstance = axios.create({
-  baseURL: "api",
+  baseURL: apiUrl,
   timeout: 100000,
 });
 
+const notifyMessage = (response: any, data: any, status: number) => {
+  const { config } = response;
+  const customRequestOptions: UseRequestType = ((config || {}) as any)
+    .customRequestOptions;
+  const { isErrorNotify = true, isSuccessNotify = false } =
+    customRequestOptions;
+
+  const { code, message } = data;
+  if (status === 200) {
+    if (isSuccessNotify && code == 0) {
+      Message.success(message ?? "请求成功");
+      return;
+    }
+    if (code !== 0 && isErrorNotify) {
+      Message.error(message || "请求错误");
+    }
+  } else {
+    if (isErrorNotify) {
+      Message.error(message || "请求错误");
+    }
+    if (status === 401) {
+      window.location.href = "/login";
+      // redirect("/login");
+    }
+  }
+};
+
 axiosInstance.interceptors.request.use(
   function (config) {
+    const token = useLoginStateStore.getState().state.token;
     // 在发送请求之前做些什么
+    config.headers.authorization = token;
     return config;
   },
   function (error) {
@@ -27,34 +61,30 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   function (response) {
-    return response;
+    notifyMessage(response, response.data, response.status);
+    return response.data;
   },
   function (error) {
     const {
-      config,
-      response: { data },
+      response: { data, status },
     } = error;
-    const customRequestOptions: UseRequestType = (config || {})
-      .customRequestOptions;
-    const { isErrorNotify = true } = customRequestOptions;
-    if (isErrorNotify) {
-      Message.error(data?.message || "请求错误");
-    }
+    notifyMessage(error, data, status);
     return Promise.resolve(data);
   }
 );
 
 export const request = (
   str: string,
-  requestParams: any,
-  axiosRequestConfig: AxiosRequestConfig
+  requestParams?: any,
+  axiosRequestConfig?: AxiosRequestConfig
 ) => {
   const { method = "get" } = axiosRequestConfig || {};
+
   const formatParams =
     method === "get" ? { params: requestParams } : requestParams;
 
   if (method === "get") {
-    return axios.get(str, {
+    return axiosInstance.get(str, {
       ...axiosRequestConfig,
       ...formatParams,
     });
