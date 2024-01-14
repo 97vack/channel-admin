@@ -1,10 +1,13 @@
-import { Button, Table, Tooltip, Tag } from "antd";
+import { Button, Tooltip, Tag } from "antd";
 import { useRequest } from "@/hooks/useRequest";
 import { useEffect } from "react";
 import type { ColumnsType } from "antd/es/table";
 import { useLoginStateStore } from "@/store/useLoginStateStore";
+import { useCoutry } from "@/hooks/useCoutry";
+import { Table, TableWrap } from "@/component/Table";
 
 export function Channel() {
+  const { getName } = useCoutry();
   const { run, loading, data } = useRequest(
     "/channel/admantum/get_admantum_offerList",
     {
@@ -38,8 +41,12 @@ export function Channel() {
       dataIndex: "offer_countries",
       width: 300,
       ellipsis: true,
-      render: (countries: any) => {
-        return <div>{countries}(新西兰)</div>;
+      render: (code: any) => {
+        return (
+          <div>
+            {code}({getName(code)})
+          </div>
+        );
       },
     },
     {
@@ -99,8 +106,6 @@ export function Channel() {
     },
   ];
 
-  console.log(virtualCurrency);
-
   useEffect(() => {
     run();
     getUserVirtualCurrency();
@@ -109,28 +114,31 @@ export function Channel() {
   const userId = useLoginStateStore.getState().state.userId;
 
   return (
-    <div>
-      <div>积分: {virtualCurrency || 0}</div>
-      <Button
-        type="link"
-        target="_blank"
-        href={`https://www.admantum.com/offers?appid=33560&uid=${userId}`}
-      >
-        直接打开优惠墙
-      </Button>
-      <Table
-        style={{ marginTop: "20px" }}
-        scroll={{ x: true }}
-        sticky
-        // tableLayout="fixed"
-        loading={loading}
-        dataSource={data}
-        columns={columns}
-        rowKey={(record) => {
-          return record.offer_id;
-        }}
-      />
-    </div>
+    <TableWrap
+      getTop={() => (
+        <>
+          <div>积分: {virtualCurrency || 0}</div>
+          <Button
+            type="link"
+            target="_blank"
+            href={`https://www.admantum.com/offers?appid=33560&uid=${userId}`}
+          >
+            直接打开优惠墙
+          </Button>
+        </>
+      )}
+      getTable={() => (
+        <Table
+          style={{ marginTop: "20px" }}
+          loading={loading}
+          dataSource={data}
+          columns={columns}
+          rowKey={(record) => {
+            return record.offer_id;
+          }}
+        />
+      )}
+    />
   );
 }
 

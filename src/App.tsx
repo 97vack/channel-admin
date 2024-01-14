@@ -17,7 +17,12 @@ function App() {
 
   return (
     <Guard>
-      <div style={{ padding: "15px" }}>
+      <div
+        style={{
+          padding: "15px",
+          height: "100%",
+        }}
+      >
         <Outlet />
       </div>
     </Guard>

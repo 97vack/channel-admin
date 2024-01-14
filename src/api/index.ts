@@ -41,7 +41,6 @@ const notifyMessage = (response: any, data: any, status: number) => {
     }
     if (status === 401) {
       window.location.href = "/login";
-      // redirect("/login");
     }
   }
 };
