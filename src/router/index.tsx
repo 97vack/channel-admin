@@ -1,52 +1,37 @@
 import { createBrowserRouter } from "react-router-dom";
 import ErrorPage from "@/pages/ErrorPage";
 import App from "@/App";
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
+import { withLazyRoute } from "./utils";
+import channelRoutes from "./channel";
+import dashbordRoutes from "./dashbord";
+import type { RouteObject } from "react-router-dom";
 
 const Login = lazy(() => import("@/pages/Login"));
-const Channel = lazy(() => import("@/pages/channel"));
+
 const Register = lazy(() => import("@/pages/Register"));
 const Home = lazy(() => import("@/pages/home"));
+
+export type ReactRouteTypes = RouteObject & {
+  menuKey?: string;
+};
 
 export const routers = createBrowserRouter([
   {
     path: "/",
+    element: withLazyRoute(<Home />),
+  },
+  {
     element: <App />,
     errorElement: <ErrorPage />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense>
-            <Home />
-          </Suspense>
-        ),
-      },
-      {
-        index: true,
-        path: "/channel",
-        element: (
-          <Suspense>
-            <Channel />
-          </Suspense>
-        ),
-      },
-    ],
+    children: [...dashbordRoutes, ...channelRoutes],
   },
   {
     path: "/login",
-    element: (
-      <Suspense>
-        <Login />
-      </Suspense>
-    ),
+    element: withLazyRoute(<Login />),
   },
   {
     path: "/register",
-    element: (
-      <Suspense>
-        <Register />
-      </Suspense>
-    ),
+    element: withLazyRoute(<Register />),
   },
 ]);

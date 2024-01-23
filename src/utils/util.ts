@@ -1,4 +1,5 @@
 import { message as Message } from "antd";
+import CryptoJS from "crypto-js";
 
 export const isMobileDevice = () =>
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -80,4 +81,33 @@ export const formatAmt = (
       ? `${isAutoAddPrefix ? "¥" : ""}` + getToLocale(value, decimalPlaces)
       : ""
   }`;
+};
+
+export const isDev = () => import.meta.env.MODE === "development";
+
+export const isProd = () => import.meta.env.MODE === "production";
+
+export const getCryptKey = () => CryptoJS.enc.Utf8.parse("ANSNDNSNDKSKSMKS");
+
+export const getCryptIv = () => CryptoJS.enc.Utf8.parse("ANSNDNSNDKSKSMKS");
+
+export const encrypt = (str: string) => {
+  let encrypted = CryptoJS.AES.encrypt(str, getCryptKey(), {
+    iv: getCryptIv(),
+    mode: CryptoJS.mode.CBC,
+  });
+  return encrypted.ciphertext.toString().toUpperCase();
+};
+
+export const decrypt = (str: string) => {
+  var global_key = getCryptKey();
+  var global_IV = getCryptIv();
+  let dataHexStr = CryptoJS.enc.Hex.parse(str);
+  let dataBase64 = CryptoJS.enc.Base64.stringify(dataHexStr);
+  let decrypt = CryptoJS.AES.decrypt(dataBase64, global_key, {
+    iv: global_IV,
+    mode: CryptoJS.mode.CBC,
+  });
+  let decryptedStr = decrypt.toString(CryptoJS.enc.Utf8);
+  return decryptedStr.toString();
 };

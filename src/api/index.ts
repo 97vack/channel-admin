@@ -2,7 +2,6 @@ import axios from "axios";
 import type { AxiosRequestConfig } from "axios";
 import { message as Message } from "antd";
 import { useLoginStateStore } from "@/store/useLoginStateStore";
-import { redirect } from "react-router-dom";
 
 export type UseRequestType = {
   isSuccessNotify?: boolean;
@@ -40,6 +39,7 @@ const notifyMessage = (response: any, data: any, status: number) => {
       Message.error(message || "请求错误");
     }
     if (status === 401) {
+      useLoginStateStore.getState().clear();
       window.location.href = "/login";
     }
   }
@@ -47,9 +47,9 @@ const notifyMessage = (response: any, data: any, status: number) => {
 
 axiosInstance.interceptors.request.use(
   function (config) {
-    const token = useLoginStateStore.getState().state.token;
+    const user = useLoginStateStore.getState().getLocalStorage();
     // 在发送请求之前做些什么
-    config.headers.authorization = token;
+    config.headers.authorization = user?.token || "";
     return config;
   },
   function (error) {
