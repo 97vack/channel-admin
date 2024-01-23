@@ -9,6 +9,7 @@ import loginLeftBg from "@/assets/imgs/login-left-bg.jpg";
 import logoJpg from "@/assets/imgs/logo.jpg";
 import logoSvg from "@/assets/imgs/logo.svg";
 import { useLoginStateStore } from "@/store/useLoginStateStore";
+import { emailRegex } from "@/utils/validationPatterns";
 
 export const LabelWrap = ({ children }: { children: any }) => (
   <span style={{ fontSize: "14px", color: "#5e5873" }}>{children}</span>
@@ -35,7 +36,6 @@ function Login() {
     const res = await run(model);
     if (res) {
       useLoginStateStore.getState().setUsers(res);
-      console.log(555);
       history.push("/dashbord/channelList");
     }
   };
@@ -48,7 +48,17 @@ function Login() {
 
   const renderEmail = render("email", {
     label: <LabelWrap>User</LabelWrap>,
-    rules: { required: "Email is required" },
+    rules: [
+      { required: "Email is required" },
+      {
+        validator(value) {
+          if (!emailRegex.test(value)) {
+            return "The email format is incorrect";
+          }
+          return "";
+        },
+      },
+    ],
     requireIndicator: true,
   })(
     <Input

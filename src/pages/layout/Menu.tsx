@@ -76,6 +76,11 @@ const items: any[] = [
         key: "/channel/surveyxa",
         pathname: "/channel/surveyxa",
       },
+      {
+        label: "bitLabs",
+        key: "/channel/bitLabs",
+        pathname: "/channel/bitLabs",
+      },
     ],
   },
 ];
